@@ -1,4 +1,5 @@
 import random
+from Sbox import SBox 
 
 class AES:
     def __init__(self, key_length=None):
@@ -91,15 +92,12 @@ class AES:
         for r in range(4):
             print(' '.join(str(ord(c)) for c in block[r]))
 
-# Placeholder for SBox class, actual implementation needed
-class SBox:
-    @staticmethod
-    def encrypt(byte):
-        return byte  # Placeholder for S-Box encryption
+    def keySchedule(key):
+        N = len(key)
 
-    @staticmethod
-    def decrypt(byte):
-        return byte  # Placeholder for S-Box decryption
+    def getKeyWord():
+        word = {}
+        
 
 # Example usage
 if __name__ == '__main__':
