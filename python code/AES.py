@@ -8,6 +8,21 @@ class AES:
             key_length = random.choice(self.key_lengths)
         self.gen_key(key_length)
 
+    # AES Round Constants for key schedule
+    round_constants = {
+        1: 0x01,
+        2: 0x02,
+        3: 0x04,
+        4: 0x08,
+        5: 0x10,
+        6: 0x20,
+        7: 0x40,
+        8: 0x80,
+        9: 0x1B,
+        10: 0x36
+    }
+
+
     def gen_key(self, key_length):
         self.key = [self.rand_byte() for _ in range(key_length // 8)]
 
