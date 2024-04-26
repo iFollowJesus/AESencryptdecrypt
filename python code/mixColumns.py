@@ -120,5 +120,37 @@ class mixColumns:
     0xd7,0xd9,0xcb,0xc5,0xef,0xe1,0xf3,0xfd,0xa7,0xa9,0xbb,0xb5,0x9f,0x91,0x83,0x8d
     ]
 
+    def galois_mult(self, a, b):
+        """ Perform Galois multiplication of two bytes """
+        if b == 1:
+            return a
+        elif b == 2:
+            return self.mult2[a]
+        elif b == 3:
+            return self.mult3[a]
+        elif b == 9:
+            return self.mult9[a]
+        elif b == 11:
+            return self.mult11[a]
+        elif b == 13:
+            return self.mult13[a]
+        elif b == 14:
+            return self.mult14[a]
 
-    
+    def mix_single_column(self, column):
+        """ Mix a single column of the state matrix """
+        temp = column.copy()
+        column[0] = self.galois_mult(temp[0], 2) ^ self.galois_mult(temp[1], 3) ^ temp[2] ^ temp[3]
+        column[1] = temp[0] ^ self.galois_mult(temp[1], 2) ^ self.galois_mult(temp[2], 3) ^ temp[3]
+        column[2] = temp[0] ^ temp[1] ^ self.galois_mult(temp[2], 2) ^ self.galois_mult(temp[3], 3)
+        column[3] = self.galois_mult(temp[0], 3) ^ temp[1] ^ temp[2] ^ self.galois_mult(temp[3], 2)
+        return column
+
+    def mix_columns(self, state):
+        """ Apply the MixColumns step to the state matrix """
+        for i in range(4):  # Assuming state is a 4x4 matrix
+            column = [state[row][i] for row in range(4)]
+            column = self.mix_single_column(column)
+            for row in range(4):
+                state[row][i] = column[row]
+        return state
