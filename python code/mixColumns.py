@@ -154,3 +154,25 @@ class mixColumns:
             for row in range(4):
                 state[row][i] = column[row]
         return state
+    
+    def inv_mix_single_column(self, column):
+        """ Inverse mix a single column of the state matrix """
+        temp = column.copy()
+        column[0] = (self.galois_mult(temp[0], 14) ^ self.galois_mult(temp[1], 11) ^
+                     self.galois_mult(temp[2], 13) ^ self.galois_mult(temp[3], 9))
+        column[1] = (self.galois_mult(temp[0], 9) ^ self.galois_mult(temp[1], 14) ^
+                     self.galois_mult(temp[2], 11) ^ self.galois_mult(temp[3], 13))
+        column[2] = (self.galois_mult(temp[0], 13) ^ self.galois_mult(temp[1], 9) ^
+                     self.galois_mult(temp[2], 14) ^ self.galois_mult(temp[3], 11))
+        column[3] = (self.galois_mult(temp[0], 11) ^ self.galois_mult(temp[1], 13) ^
+                     self.galois_mult(temp[2], 9) ^ self.galois_mult(temp[3], 14))
+        return column
+
+    def inv_mix_columns(self, state):
+        """ Apply the InvMixColumns step to the state matrix """
+        for i in range(4):  # Assuming state is a 4x4 matrix
+            column = [state[row][i] for row in range(4)]
+            column = self.inv_mix_single_column(column)
+            for row in range(4):
+                state[row][i] = column[row]
+        return state
