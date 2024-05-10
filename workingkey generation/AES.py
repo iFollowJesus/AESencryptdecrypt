@@ -5,14 +5,25 @@ from mixColumns import mixColumns
 class AES:
     def __init__(self, key_length=16):
         self.mix_columns_instance = mixColumns()
-        key = self.generate_key(key_length)
-        print("The original key! ", key)
+        self.key = self.generate_key(key_length)
+        self.key = [84, 104, 97, 116, 115, 32, 109, 121, 32, 75, 117, 110, 103, 32, 70, 117]
+        print("The original key! ", self.key)
         # Assuming the key_schedule method returns only the final_round_keys
-        self.final_round_keys = self.key_schedule(key)
-
+        self.final_round_keys = self.key_schedule(self.key)
         print("THE FINAL KEYS", self.final_round_keys)
+        for key_list in self.final_round_keys:
+            hex_keys = AES.int_list_to_hex(key_list)
+            print(hex_keys)
 
-
+    def int_list_to_hex(key_list):
+        hex_keys = []
+        for key_row in key_list:
+            hex_row = []
+            for num in key_row:
+                hex_row.append(hex(num)[2:].zfill(2))
+            hex_keys.append(hex_row)
+        return hex_keys
+    
     # AES Round Constants for key schedule
     def get_round_constants(self, round_num):
         round_constants = [
@@ -44,18 +55,31 @@ class AES:
     def rand_byte(self):
         return random.randint(0, 255)
 
+    def text_to_state_matrix(plaintext):
+        state_matrix = []
+        for col in range(4):
+            column = []
+            for row in range(4):
+                if row * 4 + col < len(plaintext):
+                    char = plaintext[row * 4 + col]
+                    column.append(ord(char))  # Convert character to ASCII
+                else:
+                    column.append(0)  # If plaintext is shorter than 16 bytes, pad with 0
+            state_matrix.append(column)
+        return state_matrix
+    
     def encrypt(self, plaintext_bytes):
-        plaintext_padded = self.pad_plaintext(plaintext_bytes)
-        print("Real plaintext after padding? ")
-        print(plaintext_padded)
         ciphertext = bytearray()
-        for i in range(0, len(plaintext_padded), 16):
-            block = plaintext_padded[i:i+16]
-            print("Plaintext block after padding")
-            print(block)
-            encrypted_block = self.cipher_block(block, mode=True)
+        for i in range(0, len(plaintext_bytes), 16):
+            block = plaintext_bytes[i:i+16]
+            print("Block to state matrix?", block)
+            state_matrix = AES.text_to_state_matrix(block)
+
+            print("State matrix for plaintext block:", state_matrix)
+            encrypted_block = self.cipher_block(state_matrix, mode=True)  # Assuming cipher_block accepts state matrix
             ciphertext.extend(encrypted_block)
         return bytes(ciphertext)
+
 
 
     def decrypt(self, ciphertext_bytes):
@@ -82,12 +106,6 @@ class AES:
             print("Decoded text (UTF-8, with invalid sequences replaced):", plaintext_decoded)
 
         return deciphered_text
-
-    def add_round_key(self, block, round_key):
-        for i in range(4):  # Iterate over columns
-            for j in range(4):  # Iterate over rows
-                block[j][i] ^= round_key[i][j]  # Perform XOR operation
-
 
     def key_schedule(self, key):
         key_bytes = [b for b in key] 
@@ -145,7 +163,6 @@ class AES:
         round_constants = self.get_round_constants(round_num)
         print("The round constants are ", round_constants)
         xor_result = bytes([b1 ^ b2 for b1, b2 in zip(transformed_bytes, round_constants)])
-        print("XORed Result:")
         xor_list = [integer for integer in xor_result]
         print("The XOR list", xor_list)
         return xor_list
@@ -156,10 +173,16 @@ class AES:
         print("The previous round key is: ", prev_round_key)
         new_round_keys = []
 
+        print("The_new_key word is ", new_key_word)
+
         for sub_key in prev_round_key:
                 # XOR the new key word with each integer in the current list
+                print("What sub key im XORING ", sub_key)
+                print("What new key word Im xoring", new_key_word)
                 xor_result = [b1 ^ b2 for b1, b2 in zip(sub_key, new_key_word)]
+                print("The result was:", xor_result)
                 new_round_keys.append(xor_result)
+                new_key_word = xor_result
         print("The new round keys are: ", new_round_keys)
 
         return new_round_keys
@@ -191,19 +214,46 @@ class AES:
                     index += 1
         return last_block
 
+    def add_round_key(self, block, round_key):
+        for i in range(4):  # Iterate over columns
+            for j in range(4):  # Iterate over rows
+                print("the block im trying to xor", block[j][i])
+                print("the round key im trying to xor", round_key[j][i])  # Use round_key directly
+                block[j][i] ^= round_key[j][i]  # Perform XOR operation
+                print("The result is ", block[j][i])
+
+    def print_block_hex(self, block):
+        for row in block:
+            hex_row = " ".join(format(byte, '02X') for byte in row)
+            print(hex_row)
+
     def cipher_block(self, block, mode):
-        self.add_round_key(block)
 
         num_rounds = 10 if len(self.key) == 16 else (12 if len(self.key) == 24 else 14)
+        print("Number of rounds", num_rounds)
 
-        for _ in range(num_rounds):
+        for round_num in range(num_rounds):
+            print("The round_num", round_num)
+            round_key = self.final_round_keys[round_num]
+            print("The round key im sending?", round_key)
+
+            # Add round key
+            self.add_round_key(block, round_key)
+
+            print("The new block is: ")
+            self.print_block_hex(block)
+            
+            # SubBytes
             self.sub_bytes(block, mode)
+            
+            # ShiftRows
             self.shift_rows(block)
+            
+            # MixColumns (only for encryption mode)
             if mode:
-                mixColumns.mix_columns(block)  # Use the mixColumns function for encryption
+                mixColumns.mix_columns(block)
             else:
-                mixColumns.inv_mix_columns(block)  # Use the invMixColumns function for decryption
-            self.add_round_key(block)
+                mixColumns.inv_mix_columns(block)
 
         self.sub_bytes(block, mode)
         self.shift_rows(block)
@@ -239,18 +289,15 @@ class AES:
 
     def getKeyWord():
         word = {}
-
-    def pad_plaintext(bytes):
-        pass
         
 
 # Example usage
 if __name__ == '__main__':
-    plain_text = "The quick brown fox jumps over the lazy dog.  Lorem ipsum dolor sit amet."
+    plain_text = "Two One Nine Two"
 
     rijndael = AES()
     cipher_text = rijndael.encrypt(plain_text)
-    print(cipher_text)
+    #print(cipher_text)
 
-    decrypt_text = rijndael.decrypt(cipher_text)
-    print(decrypt_text)
+    #decrypt_text = rijndael.decrypt(cipher_text)
+    #print(decrypt_text)
