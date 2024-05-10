@@ -161,8 +161,9 @@ class mixColumns:
 
             print("THe column after mix column", final_column)
             print("This is the current state", state)
-            for row in range(changedState):
+            for row in range(4):  # Assuming state is a 4x4 matrix
                 changedState[row][i] = final_column[row]
+
         print("State is: ", state)
         return changedState
     
@@ -193,24 +194,22 @@ input_hex = [
     "6a59cbbd", "4e4812a0", "989e309c", "8b3df49b"
 ]
 state = [[int(input_hex[j][i:i+2], 16) for i in range(0, 8, 2)] for j in range(4)]
-print("Original State:")
-for row in state:
-    print(' '.join(format(x, '02x') for x in row))
-changeState = state
-print("This is my before state ", changeState)
+
+print("This is my before state ", state)
 
 # Perform Mix Columns
-mixed_state = mixColumns.mix_columns(changeState)
-print("Mixed state is: ", mixed_state)
-print("State is for real:", state)
+mixed_state = mixColumns.mix_columns(state)
 
-# Perform Inverse Mix Columns
-restored_state = mixColumns.inv_mix_columns(mixed_state)
+
 
 # Output the results
 print("\nMixed State:")
 for row in mixed_state:
     print(' '.join(format(x, '02x') for x in row))
+
+# Perform Inverse Mix Columns
+restored_state = mixColumns.inv_mix_columns(mixed_state)
+
 
 print("\nRestored State (after Inverse Mix Columns):")
 for row in restored_state:
