@@ -216,23 +216,18 @@ class AES:
 
         return cipher_block
 
-    def sub_bytes(self, block, mode):
-        for r in range(4):
-            for c in range(4):
-                if mode:
-                    block[r][c] = chr(SBox.encrypt(ord(block[r][c])))
-                else:
-                    block[r][c] = chr(SBox.decrypt(ord(block[r][c])))
+    def sub_bytes(self, pByte, mode):
+        result = None
+        if mode:
+            result = SBox.encrypt(pByte)
+        else:
+            result = SBox.decrypt(pByte)
+        return result
 
     def shift_rows(self, block):
-         for r in range(1, 4):
+        for r in range(1, 4):
             row = block[r]
-            if r == 1:
-                block[r] = row[r:] + row[:r]  # shift left for encryption
-            elif r == 2:
-                block[r] = row[r:] + row[:r]  # shift left twice or right twice
-            elif r == 3:
-                block[r] = row[-r:] + row[:-r]  # shift right for decryption
+            block[r] = row[r:] + row[:r]
 
     # For displaying the block
     def print_block(self, block):
