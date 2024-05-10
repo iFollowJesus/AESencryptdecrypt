@@ -2,7 +2,7 @@ import random
 from Sbox import SBox
 from mixColumns import mixColumns
 
-debug = False
+debug = True
 
 class AES:
     def __init__(self, key_length=16):
@@ -94,8 +94,8 @@ class AES:
 
             #print("State matrix for plaintext block:", state_matrix)
             encrypted_block = self.cipher_block(state_matrix, mode=True)  # Assuming cipher_block accepts state matrix
-            print("encrypted block: ")
-            print(encrypted_block)
+            #print("encrypted block: ")
+            #print(encrypted_block)
             ciphertext.extend(encrypted_block)
         return bytes(ciphertext)
 
@@ -108,7 +108,7 @@ class AES:
             state_matrix = AES.int_to_state_matrix(block)
 
             decrypted_block = self.cipher_block(state_matrix, mode=False)
-            print("Decrypted_block", decrypted_block)  # Add this line to print the decrypted block
+            #print("Decrypted_block", decrypted_block)  # Add this line to print the decrypted block
             decipheredText.extend(decrypted_block)
 
         #print("Deciphered Text before trying to remove padding", decipheredText)
@@ -126,7 +126,7 @@ class AES:
         #     plaintext_decoded = decipheredText.decode("utf-8", errors="replace")
         #     #print("Decoded text (UTF-8, with invalid sequences replaced):", plaintext_decoded)
 
-        return decipheredText
+        return bytes(decipheredText)
 
     def key_schedule(self, key):
         key_bytes = [b for b in key] 
@@ -311,8 +311,8 @@ class AES:
         #AES.print_state("DECRYPT CIPHER block", block)
         # Convert the final block into bytes
         cipher_bytes = bytes(block[row][col] for col in range(4) for row in range(4))
-        print("cipher bytes: ")
-        print(cipher_bytes)
+        #print("cipher bytes: ")
+        #print(cipher_bytes)
         return cipher_bytes
 
     def sub_block(self, block, mode):
@@ -352,7 +352,7 @@ class AES:
             if mode:
                 block[r] = row[r:] + row[:r]
             else:
-                block[r] = row[:r] + row[r:]
+                block[r] = row[4-r:] + row[:4-r]
 
 
         if debug:
@@ -378,7 +378,7 @@ class AES:
 
 # Example usage
 if __name__ == '__main__':
-    plain_text = "Hello, AES! This text is exactly 32 bytes!!"
+    plain_text = "Two One Nine Two"#"Hello, AES! This text is exactly 32 bytes!!"
     print(f"Original Message: {plain_text}")
 
     rijndael = AES()
