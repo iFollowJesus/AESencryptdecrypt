@@ -1,5 +1,6 @@
 import random
-from Sbox import SBox 
+from Sbox import SBox
+from mixColumns import mixColumns
 
 class AES:
     def __init__(self, key_length=None):
@@ -41,8 +42,11 @@ class AES:
         out_text = []
         index = 0
 
-        while not self.get_block(block, char_array, index):
+        while index < len(char_array):
+            last_block = self.get_block(block, char_array, index)
             out_text.append(self.cipher_block(block, mode))
+            if last_block:
+                break
             index += 16
 
         return ''.join(out_text)
@@ -62,13 +66,15 @@ class AES:
     def cipher_block(self, block, mode):
         self.add_round_key(block)
 
-        num_rounds = len(self.key) // 4 + 5
+        num_rounds = 10 if len(self.key) == 16 else (12 if len(self.key) == 24 else 14)
 
         for _ in range(num_rounds):
             self.sub_bytes(block, mode)
             self.shift_rows(block)
-            # Assuming MixColumns is a required step but left as a placeholder
-            # self.mix_columns(block)
+            if mode:
+                mixColumns.mix_columns(block)  # Use the mixColumns function for encryption
+            else:
+                mixColumns.inv_mix_columns(block)  # Use the invMixColumns function for decryption
             self.add_round_key(block)
 
         self.sub_bytes(block, mode)
@@ -94,9 +100,14 @@ class AES:
                     block[r][c] = chr(SBox.decrypt(ord(block[r][c])))
 
     def shift_rows(self, block):
-        for r in range(1, 4):
+         for r in range(1, 4):
             row = block[r]
-            block[r] = row[r:] + row[:r]
+            if r == 1:
+                block[r] = row[r:] + row[:r]  # shift left for encryption
+            elif r == 2:
+                block[r] = row[r:] + row[:r]  # shift left twice or right twice
+            elif r == 3:
+                block[r] = row[-r:] + row[:-r]  # shift right for decryption
 
     # Placeholder for MixColumns operation
     def mix_columns(self, block):
