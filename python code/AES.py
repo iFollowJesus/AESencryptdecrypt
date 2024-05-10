@@ -55,29 +55,28 @@ class AES:
     def rand_byte(self):
         return random.randint(0, 255)
 
-    def text_to_state_matrix(plaintext):
-        state_matrix = []
-        for col in range(4):
-            column = []
-            for row in range(4):
-                if row * 4 + col < len(plaintext):
-                    char = plaintext[row * 4 + col]
-                    column.append(ord(char))  # Convert character to ASCII
-                else:
-                    column.append(0)  # If plaintext is shorter than 16 bytes, pad with 0
-            state_matrix.append(column)
+    def bytes_to_state_matrix(self, block):
+        state_matrix = [[0] * 4 for _ in range(4)]  # Initialize a 4x4 matrix with zeros
+
+        for i, byte in enumerate(block):
+            col = i % 4  # Determine the column index
+            row = i // 4  # Determine the row index
+            state_matrix[row][col] = byte
+
         return state_matrix
     
-    def encrypt(self, plaintext_bytes):
+    def encrypt(self, plaintext):
+        plaintext_bytes = plaintext.encode('utf-8')
         ciphertext = bytearray()
         for i in range(0, len(plaintext_bytes), 16):
             block = plaintext_bytes[i:i+16]
             print("Block to state matrix?", block)
-            state_matrix = AES.text_to_state_matrix(block)
+            
+            state_matrix = self.bytes_to_state_matrix(block)  # Convert block to state matrix
 
             print("State matrix for plaintext block:", state_matrix)
             encrypted_block = self.cipher_block(state_matrix, mode=True)  # Assuming cipher_block accepts state matrix
-            ciphertext.extend(encrypted_block)
+            print("The final block!?!?", encrypted_block)
         return bytes(ciphertext)
 
 
@@ -148,7 +147,6 @@ class AES:
     def generate_round_key_word(self, last_num, round_num):
         # Rotate the numbers
         rotated_num = last_num[1:] + [last_num[0]]
-        print("The rotated num", rotated_num)
 
         transformed_bytes = []
 
@@ -159,31 +157,21 @@ class AES:
             
             transformed_bytes.append(substituted_byte)
 
-        print("The substituted result was", transformed_bytes)
         round_constants = self.get_round_constants(round_num)
-        print("The round constants are ", round_constants)
         xor_result = bytes([b1 ^ b2 for b1, b2 in zip(transformed_bytes, round_constants)])
         xor_list = [integer for integer in xor_result]
-        print("The XOR list", xor_list)
         return xor_list
 
     
     def generate_new_round_keys(self, prev_round_key, new_key_word):
 
-        print("The previous round key is: ", prev_round_key)
         new_round_keys = []
-
-        print("The_new_key word is ", new_key_word)
 
         for sub_key in prev_round_key:
                 # XOR the new key word with each integer in the current list
-                print("What sub key im XORING ", sub_key)
-                print("What new key word Im xoring", new_key_word)
                 xor_result = [b1 ^ b2 for b1, b2 in zip(sub_key, new_key_word)]
-                print("The result was:", xor_result)
                 new_round_keys.append(xor_result)
                 new_key_word = xor_result
-        print("The new round keys are: ", new_round_keys)
 
         return new_round_keys
 
@@ -213,20 +201,33 @@ class AES:
                     block[row][col] = chars[index]
                     index += 1
         return last_block
-
+    
     def add_round_key(self, block, round_key):
-        for i in range(4):  # Iterate over columns
-            for j in range(4):  # Iterate over rows
-                print("the block im trying to xor", block[j][i])
-                print("the round key im trying to xor", round_key[j][i])  # Use round_key directly
+        print("Block Im recieving from round key")
+        self.print_block_hex(block)
+        print("round key im reciving from round key")
+        self.print_block_hex(round_key)
+        for j in range(4):  # Iterate over rows
+            for i in range(4):  # Iterate over columns
                 block[j][i] ^= round_key[j][i]  # Perform XOR operation
-                print("The result is ", block[j][i])
+
 
     def print_block_hex(self, block):
-        for row in block:
-            hex_row = " ".join(format(byte, '02X') for byte in row)
-            print(hex_row)
+        for i in range(4):  # Iterate over columns
+            hex_column = " ".join(format(row[i], '02X') for row in block)
+            print(hex_column)
 
+
+    def transpose_block(self, block):
+        # Transpose the block matrix
+        block_transposed = [[block[j][i] for j in range(len(block))] for i in range(len(block[0]))]
+        return block_transposed
+    
+    def transpose_to_columns(self, block):
+        # Transpose the block matrix back to columns
+        block_columns = [[block[j][i] for j in range(len(block))] for i in range(len(block[0]))]
+        return block_columns
+    
     def cipher_block(self, block, mode):
 
         num_rounds = 10 if len(self.key) == 16 else (12 if len(self.key) == 24 else 14)
@@ -235,34 +236,52 @@ class AES:
         for round_num in range(num_rounds):
             print("The round_num", round_num)
             round_key = self.final_round_keys[round_num]
-            print("The round key im sending?", round_key)
+
 
             # Add round key
             self.add_round_key(block, round_key)
+            print("RoundKey thing ", self.print_block_hex(block))
 
-            print("The new block is: ")
-            self.print_block_hex(block)
-            
-            # SubBytes
-            self.sub_bytes(block, mode)
-            
+            print("The round key bloc", round_num)
+            print(self.print_block_hex(block))
+
+            new_block = []
+            for row in block:  # Iterate over each row in the block
+                        new_row = []  # Create a new row to store the updated bytes
+                        for byte in row:  # Iterate over each byte in the row
+                            new_byte = self.sub_bytes(byte, mode)  # Pass each byte to the sub_bytes method
+                            new_row.append(new_byte)  # Append the updated byte to the new row
+                        new_block.append(new_row)  # Append the new row to the new block
+            block = new_block  # Update the original block with the new block
+
+            print(self.print_block_hex(block))
+
+            transposed_block = self.transpose_block(block)
+
+
             # ShiftRows
-            self.shift_rows(block)
-            
-            # MixColumns (only for encryption mode)
+            self.shift_rows(transposed_block)
+            print("Shifted rows")
+            self.transpose_to_columns(transposed_block)
+            self.transpose_to_columns(transposed_block)
+
+            #Skip mixColumns for the final round
+            if round_num == num_rounds - 1:
+                finalBlock = self.transpose_block(transposed_block)
+                self.add_round_key(finalBlock, self.final_round_keys[round_num + 1])
+                print("FInal block")
+                self.print_block_hex(finalBlock)
+                cipher_block = ' '.join([''.join(format(byte, '02X') for byte in row) for row in finalBlock])
+                break  
+
+            # MixColumns
             if mode:
-                mixColumns.mix_columns(block)
+                block = mixColumns.mix_columns(transposed_block)
+                block = self.transpose_to_columns(block)
+                print("block columns from mix row")
+                print(self.print_block_hex(block))
             else:
                 mixColumns.inv_mix_columns(block)
-
-        self.sub_bytes(block, mode)
-        self.shift_rows(block)
-        self.add_round_key(block)
-
-        cipher_block = ''
-        for col in range(4):
-            for row in range(4):
-                cipher_block += block[row][col]
 
         return cipher_block
 
@@ -275,9 +294,13 @@ class AES:
         return result
 
     def shift_rows(self, block):
-        for r in range(1, 4):
-            row = block[r]
-            block[r] = row[r:] + row[:r]
+        for c in range(1, 4):  # Start from the second column (index 1) to the last column
+            # Shift elements within the column
+            shift_amount = c  # Determine the number of positions to shift
+            block[c] = block[c][shift_amount:] + block[c][:shift_amount]
+
+
+
 
     # For displaying the block
     def print_block(self, block):

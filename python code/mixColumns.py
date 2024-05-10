@@ -152,15 +152,13 @@ class mixColumns:
     def mix_columns(state):
         changedState = state
         """ Apply the MixColumns step to the state matrix """
-        print("the state from mix columns:")
+        print("the state recieved by mix columns:")
         print(state)
         for i in range(4):  # Assuming state is a 4x4 matrix
             column = [state[row][i] for row in range(4)]
             print("THe column before matrix", column)
             final_column = mixColumns.mix_single_column(column)
 
-            print("THe column after mix column", final_column)
-            print("This is the current state", state)
             for row in range(4):  # Assuming state is a 4x4 matrix
                 changedState[row][i] = final_column[row]
 
