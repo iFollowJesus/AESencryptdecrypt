@@ -94,9 +94,7 @@ class AES:
 
             #print("State matrix for plaintext block:", state_matrix)
             encrypted_block = self.cipher_block(state_matrix, mode=True)  # Assuming cipher_block accepts state matrix
-            print("encrypted block: ")
-            print(encrypted_block)
-            ciphertext.extend(encrypted_block)
+            ciphertext.extend(encrypted_block.encode("utf-8"))
         return bytes(ciphertext)
 
 
@@ -108,8 +106,8 @@ class AES:
             state_matrix = AES.int_to_state_matrix(block)
 
             decrypted_block = self.cipher_block(state_matrix, mode=False)
-            print("Decrypted_block", decrypted_block)  # Add this line to print the decrypted block
-            decipheredText.extend(decrypted_block)
+            #print("Decrypted_block", decrypted_block)  # Add this line to print the decrypted block
+            decipheredText.extend(decrypted_block.encode("utf-8"))
 
         #print("Deciphered Text before trying to remove padding", decipheredText)
         # Remove padding
@@ -118,13 +116,13 @@ class AES:
         #print("Unpadded text: ", deciphered_text)
 
         # Decode the plaintext
-        # try:
-        #     plaintext_decoded = decipheredText.decode("utf-8")
-        #     #print("Decoded text:", plaintext_decoded)
-        # except UnicodeDecodeError:
-        #     #print("Unable to decode decrypted bytes as UTF-8. Trying to replace invalid sequences...")
-        #     plaintext_decoded = decipheredText.decode("utf-8", errors="replace")
-        #     #print("Decoded text (UTF-8, with invalid sequences replaced):", plaintext_decoded)
+        try:
+            plaintext_decoded = decipheredText.decode("utf-8")
+            #print("Decoded text:", plaintext_decoded)
+        except UnicodeDecodeError:
+            #print("Unable to decode decrypted bytes as UTF-8. Trying to replace invalid sequences...")
+            plaintext_decoded = decipheredText.decode("utf-8", errors="replace")
+            #print("Decoded text (UTF-8, with invalid sequences replaced):", plaintext_decoded)
 
         return decipheredText
 
@@ -282,8 +280,6 @@ class AES:
             self.shift_rows(block, mode)
             round_key = self.final_round_keys[num_rounds]
             self.add_round_key(block, round_key)
-            #AES.print_state("cipher block", block)
-
         else:
             num_rounds = 10 if len(self.key) == 16 else (12 if len(self.key) == 24 else 14)
 
@@ -308,12 +304,12 @@ class AES:
             round_key = self.final_round_keys[0]
             self.add_round_key(block, round_key)
 
-        #AES.print_state("DECRYPT CIPHER block", block)
-        # Convert the final block into bytes
-        cipher_bytes = bytes(block[row][col] for col in range(4) for row in range(4))
-        print("cipher bytes: ")
-        print(cipher_bytes)
-        return cipher_bytes
+        cipher_block = ''
+        for col in range(4):
+            for row in range(4):
+                cipher_block += str(block[row][col])
+
+        return cipher_block
 
     def sub_block(self, block, mode):
         if debug:
@@ -369,21 +365,16 @@ class AES:
 
     def getKeyWord():
         word = {}
-
-    def print_state(label, state):
-        print(label)
-        for row in state:
-            print(' '.join(f"{x:02x}" for x in row))
         
 
 # Example usage
 if __name__ == '__main__':
-    plain_text = "Hello, AES! This text is exactly 32 bytes!!"
+    plain_text = "the quick brown fox"
     print(f"Original Message: {plain_text}")
 
     rijndael = AES()
     cipher_text = rijndael.encrypt(plain_text)
-    print(f"Encrypted Message: {cipher_text}")
+    print(f"Encrypted Message: {cipher_text.decode("utf-8")}")
 
     decrypt_text = rijndael.decrypt(cipher_text)
     print(f"Decrypted Message: {decrypt_text}")
