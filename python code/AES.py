@@ -8,7 +8,7 @@ class AES:
         self.key = self.generate_key(key_length)
         self.key = [84, 104, 97, 116, 115, 32, 109, 121, 32, 75, 117, 110, 103, 32, 70, 117]
         print("The original key! ", self.key)
-        # Assuming the key_schedule method returns only the final_round_keys
+        
         self.final_round_keys = self.key_schedule(self.key)
         print("THE FINAL KEYS", self.final_round_keys)
         for key_list in self.final_round_keys:
@@ -75,7 +75,7 @@ class AES:
             state_matrix = self.bytes_to_state_matrix(block)  # Convert block to state matrix
 
             print("State matrix for plaintext block:", state_matrix)
-            encrypted_block = self.cipher_block(state_matrix, mode=True)  # Assuming cipher_block accepts state matrix
+            encrypted_block = self.cipher_block(state_matrix, mode=True) 
             print("The final block!?!?", encrypted_block)
         return bytes(ciphertext)
 
@@ -86,7 +86,7 @@ class AES:
         for i in range(0, len(ciphertext_bytes), 16):
             block = ciphertext_bytes[i:i+16]
             decrypted_block = self.cipher_block(block, mode=False)
-            print("Decrypted_block", decrypted_block)  # Add this line to print the decrypted block
+            print("Decrypted_block", decrypted_block) 
             decipheredText.extend(decrypted_block)
 
         print("Deciphered Text before trying to remove padding", decipheredText)
@@ -111,11 +111,11 @@ class AES:
         key_length = len(key_bytes)
 
         if key_length == 16:
-            nr = 10  # Number of rounds (10 for 128-bit keys)
+            nr = 10 
         elif key_length == 24:
-            nr = 12  # Number of rounds (12 for 192-bit keys)
+            nr = 12  
         elif key_length == 32:
-            nr = 14  # Number of rounds (14 for 256-bit keys)
+            nr = 14  
         else:
             raise ValueError("Invalid key length")
 
@@ -213,13 +213,13 @@ class AES:
 
 
     def print_block_hex(self, block):
-        for i in range(4):  # Iterate over columns
+        for i in range(4):  
             hex_column = " ".join(format(row[i], '02X') for row in block)
             print(hex_column)
 
 
     def transpose_block(self, block):
-        # Transpose the block matrix
+        
         block_transposed = [[block[j][i] for j in range(len(block))] for i in range(len(block[0]))]
         return block_transposed
     
@@ -238,28 +238,27 @@ class AES:
             round_key = self.final_round_keys[round_num]
 
 
-            # Add round key
+           
             self.add_round_key(block, round_key)
             print("RoundKey thing ", self.print_block_hex(block))
 
             print("The round key bloc", round_num)
             print(self.print_block_hex(block))
 
+            # Adding what came from sub bytes to the block
             new_block = []
-            for row in block:  # Iterate over each row in the block
-                        new_row = []  # Create a new row to store the updated bytes
-                        for byte in row:  # Iterate over each byte in the row
-                            new_byte = self.sub_bytes(byte, mode)  # Pass each byte to the sub_bytes method
-                            new_row.append(new_byte)  # Append the updated byte to the new row
-                        new_block.append(new_row)  # Append the new row to the new block
-            block = new_block  # Update the original block with the new block
+            for row in block:  
+                        new_row = []  
+                        for byte in row:  
+                            new_byte = self.sub_bytes(byte, mode)  
+                            new_row.append(new_byte)  
+                        new_block.append(new_row)  
+            block = new_block  
 
             print(self.print_block_hex(block))
 
             transposed_block = self.transpose_block(block)
 
-
-            # ShiftRows
             self.shift_rows(transposed_block)
             print("Shifted rows")
             self.transpose_to_columns(transposed_block)
@@ -295,11 +294,8 @@ class AES:
 
     def shift_rows(self, block):
         for c in range(1, 4):  # Start from the second column (index 1) to the last column
-            # Shift elements within the column
             shift_amount = c  # Determine the number of positions to shift
             block[c] = block[c][shift_amount:] + block[c][:shift_amount]
-
-
 
 
     # For displaying the block
