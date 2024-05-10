@@ -251,6 +251,3 @@ if __name__ == '__main__':
 
     decrypt_text = rijndael.decrypt(cipher_text)
     print(decrypt_text)
-
-
-
