@@ -141,7 +141,7 @@ class mixColumns:
     def mix_single_column(column):
         """ Mix a single column of the state matrix """
         temp = column.copy()
-        print(temp)
+        #print(temp)
         column[0] = mixColumns.galois_mult(temp[0], 2) ^ mixColumns.galois_mult(temp[1], 3) ^ temp[2] ^ temp[3]
         column[1] = temp[0] ^ mixColumns.galois_mult(temp[1], 2) ^ mixColumns.galois_mult(temp[2], 3) ^ temp[3]
         column[2] = temp[0] ^ temp[1] ^ mixColumns.galois_mult(temp[2], 2) ^ mixColumns.galois_mult(temp[3], 3)
@@ -152,19 +152,19 @@ class mixColumns:
     def mix_columns(state):
         changedState = state
         """ Apply the MixColumns step to the state matrix """
-        print("the state from mix columns:")
-        print(state)
+        #print("the state from mix columns:")
+        #print(state)
         for i in range(4):  # Assuming state is a 4x4 matrix
             column = [state[row][i] for row in range(4)]
-            print("THe column before matrix", column)
+            #print("THe column before matrix", column)
             final_column = mixColumns.mix_single_column(column)
 
-            print("THe column after mix column", final_column)
-            print("This is the current state", state)
+            #print("THe column after mix column", final_column)
+            #print("This is the current state", state)
             for row in range(4):  # Assuming state is a 4x4 matrix
                 changedState[row][i] = final_column[row]
 
-        print("State is: ", state)
+        #print("State is: ", state)
         return changedState
     
     def inv_mix_single_column(column):
@@ -189,6 +189,7 @@ class mixColumns:
                 state[row][i] = column[row]
         return state
 
+'''
 # Test data conversion from hex to integer
 input_hex = [
     "6a59cbbd", "4e4812a0", "989e309c", "8b3df49b"
@@ -214,3 +215,4 @@ restored_state = mixColumns.inv_mix_columns(mixed_state)
 print("\nRestored State (after Inverse Mix Columns):")
 for row in restored_state:
     print(' '.join(format(x, '02x') for x in row))
+'''

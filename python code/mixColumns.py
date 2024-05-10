@@ -190,6 +190,7 @@ class mixColumns:
 
 # Test data conversion from hex to integer
 input_hex = [
+    #"6a59cbbd", "4e4812a0", "989e309c", "8b3df49b"
     "6a59cbbd", "4e4812a0", "989e309c", "8b3df49b"
 ]
 state = [[int(input_hex[j][i:i+2], 16) for i in range(0, 8, 2)] for j in range(4)]
