@@ -125,17 +125,17 @@ class mixColumns:
         if b == 1:
             return a
         elif b == 2:
-            return mixColumns.mult2[a]
+            return mixColumns.mult2[int(a)]
         elif b == 3:
-            return mixColumns.mult3[a]
+            return mixColumns.mult3[int(a)]
         elif b == 9:
-            return mixColumns.mult9[a]
+            return mixColumns.mult9[int(a)]
         elif b == 11:
-            return mixColumns.mult11[a]
+            return mixColumns.mult11[int(a)]
         elif b == 13:
-            return mixColumns.mult13[a]
+            return mixColumns.mult13[int(a)]
         elif b == 14:
-            return mixColumns.mult14[a]
+            return mixColumns.mult14[int(a)]
 
     @staticmethod
     def mix_single_column(column):
